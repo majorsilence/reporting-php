@@ -34,14 +34,26 @@ Three wrappers are provided for generating reports from PHP. Pick the one that m
 
 ### Install via Composer (recommended)
 
+Add this package to your project from [Packagist](https://packagist.org/packages/majorsilence/reporting):
+
 ```bash
-composer install
+composer require majorsilence/reporting
 ```
 
 Then autoload in your script:
 
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
+```
+
+`ext-ffi` is only needed if you use `ReportNative`/`RdlLibrary` — `Report` and `ReportAot` work with a stock PHP install.
+
+### Developing this repo
+
+Clone the repo and install its own dependencies (adds `phpunit/phpunit` for the test suite):
+
+```bash
+composer install
 ```
 
 ### Manual install (no Composer)
@@ -190,7 +202,7 @@ An unrecognised format string defaults to `pdf`.
 
 ## Running the tests
 
-The test suite (`tests/ReportNativeTest.php`) covers `ReportNative`. It requires a published `rdlnative` shared library and is skipped automatically if `RDLNATIVE_LIB` is not set.
+The test suite (`tests/ReportNativeTest.php`, PHPUnit) covers `ReportNative`. It requires a published `rdlnative` shared library and is skipped automatically if `RDLNATIVE_LIB` is not set.
 
 ```bash
 # Build the native library first (from the main Reporting repo)
@@ -202,7 +214,7 @@ dotnet publish RdlNative -c Release-DrawingCompat -r linux-x64 -f net10.0 \
 export RDLNATIVE_LIB=/tmp/rdlnative-pub/librdlnative.so
 export LD_LIBRARY_PATH=/tmp/rdlnative-pub:$LD_LIBRARY_PATH
 export REPORTING_REPO_ROOT=/path/to/Reporting
-php tests/ReportNativeTest.php
+composer test
 ```
 
 On macOS replace `linux-x64` with `osx-arm64` (or `osx-x64`) and `librdlnative.so` with `librdlnative.dylib`.
@@ -217,4 +229,15 @@ See the `Examples/` subdirectory for runnable scripts:
 - `test2-connection-string-parameter.php` — connection string and report parameters
 - `test3-streaming.php` — exporting to memory for streaming HTTP responses
 
-A `viewer.php` script is also included as a simple web-based viewer that streams the rendered report directly to the browser.
+---
+
+## Releasing (maintainers)
+
+This package is published on [Packagist](https://packagist.org/packages/majorsilence/reporting). Packagist has no build/upload step -- it reads versions directly from git tags via a GitHub webhook (configured once on the Packagist package page). To cut a release:
+
+```bash
+git tag vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+```
+
+Packagist picks up the new tag automatically within a few minutes via the webhook. If it doesn't, click "Update" on the package page, or check Settings -> Webhooks on GitHub.

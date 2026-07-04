@@ -1,14 +1,29 @@
 {
     "name": "majorsilence/reporting",
-    "description": "PHP wrappers for Majorsilence Reporting (.NET)",
+    "description": "PHP wrappers for Majorsilence Reporting (.NET) -- render RDL reports to PDF, Excel, CSV, HTML and more via subprocess or in-process FFI",
     "type": "library",
-    "license": "LGPL-2.1-only",
+    "license": ["MIT", "Apache-2.0", "BSD-2-Clause"],
+    "keywords": [
+        "reporting", "rdl", "pdf", "excel", "csv", "html", "report generation",
+        "data export", "business intelligence", "dotnet", "native", "ffi",
+        "pdf generation", "spreadsheet", "tiff", "rtf"
+    ],
+    "homepage": "https://github.com/majorsilence/Reporting",
+    "authors": [
+        { "name": "Peter Gill", "email": "peter@majorsilence.com" }
+    ],
+    "support": {
+        "issues": "https://github.com/majorsilence/reporting-php/issues",
+        "source": "https://github.com/majorsilence/reporting-php"
+    },
     "require": {
-        "php": ">=8.1",
-        "ext-ffi": "*"
+        "php": ">=8.1"
+    },
+    "suggest": {
+        "ext-ffi": "Required by MajorsilenceReporting\\ReportNative and RdlLibrary for in-process rendering; not needed for Report or ReportAot (subprocess-based)."
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.0"
+        "phpunit/phpunit": "^10.5"
     },
     "autoload": {
         "psr-4": {
@@ -19,5 +34,8 @@
         "psr-4": {
             "MajorsilenceReporting\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }
