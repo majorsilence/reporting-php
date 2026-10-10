@@ -53,6 +53,19 @@ class RdlLibrary
     C;
 
     /**
+     * Turn a `const char*` result into a PHP string. PHP's FFI hands `const char*` returns back
+     * as a PHP string already (and as FFI\CData for plain `char*`), so accept both, and a null pointer.
+     * @param \FFI\CData|string|null $value
+     */
+    public static function cstr($value): string
+    {
+        if ($value === null) {
+            return 'unknown error';
+        }
+        return is_string($value) ? $value : \FFI::string($value);
+    }
+
+    /**
      * Load the shared library from $lib_path and initialize the engine.
      * Returns an \FFI instance to pass to ReportNative.
      * @throws \RuntimeException on init failure
@@ -65,7 +78,7 @@ class RdlLibrary
         $ffi = \FFI::cdef(self::C_DECLS, $lib_path);
         $ret = $ffi->rdl_init();
         if ($ret !== 0) {
-            throw new \RuntimeException('rdl_init failed: ' . \FFI::string($ffi->rdl_last_error()));
+            throw new \RuntimeException('rdl_init failed: ' . self::cstr($ffi->rdl_last_error()));
         }
         return $ffi;
     }
@@ -158,7 +171,11 @@ class ReportNative
     public function export_to_memory(string $type): string
     {
         $fmt     = in_array($type, self::VALID_TYPES, true) ? $type : 'pdf';
-        $tmpPath = (string) tempnam(sys_get_temp_dir(), 'rdlnative');
+        // Give the temp file an extension: older rdlnative builds derive the output name from it and
+        // fail on a path without one (tempnam() creates the file with no extension).
+        $base    = (string) tempnam(sys_get_temp_dir(), 'rdlnative');
+        $tmpPath = $base . '.' . $fmt;
+        @unlink($base);
         try {
             $this->export($fmt, $tmpPath);
             return (string) file_get_contents($tmpPath);
@@ -208,7 +225,7 @@ class ReportNative
     /** @throws \RuntimeException */
     private function throwLastError(string $fn): never
     {
-        $err = \FFI::string($this->ffi->rdl_last_error());
+        $err = RdlLibrary::cstr($this->ffi->rdl_last_error());
         throw new \RuntimeException("{$fn} failed: {$err}");
     }
 }
