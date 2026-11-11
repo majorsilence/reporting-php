@@ -130,6 +130,9 @@ class ReportNative
      * SkipDatabaseSchemaValidation is set automatically when dataset rows are present,
      * so no DB connection is needed at parse or render time.
      *
+     * Note: rdlnative 27+ ignores a dataset whose $rows array is empty, so the
+     * report's own query runs instead. Pass at least one row to inject.
+     *
      * Example:
      *   $rpt->add_data('Data', [
      *     ['Product' => 'Chai',  'Region' => 'North America', 'Amount' => '1250.00'],

@@ -7,14 +7,13 @@
  *   - PHP FFI extension enabled (php.ini: extension=ffi, ffi.enable=true)
  *   - Published rdlnative shared library
  *   - RDLNATIVE_LIB environment variable set to the library path
- *   - LD_LIBRARY_PATH including the library directory (required before PHP starts
- *     because PHP's FFI loads with RTLD_LOCAL; .NET runtime libs must already
- *     be findable by the dynamic linker)
+ *   - Do NOT set LD_LIBRARY_PATH to the library directory: it is not needed
+ *     and makes PHP segfault with rdlnative 27.0.0-alpha.11 when a report
+ *     opens a SQLite database.  (Linux also needs libfontconfig1 for SkiaSharp.)
  *
  * Usage (Linux):
  *   dotnet publish RdlNative/... -p:PublishAot=true -o /tmp/rdlnative-pub
  *   export RDLNATIVE_LIB=/tmp/rdlnative-pub/rdlnative.so
- *   export LD_LIBRARY_PATH=/tmp/rdlnative-pub:$LD_LIBRARY_PATH
  *   composer test
  *
  * Tests are skipped automatically (not failed) if the native library or
@@ -231,6 +230,14 @@ final class ReportNativeTest extends TestCase
         }
         $rpt = new ReportNative($this->ffi(), self::$salesRdl);
         $rpt->add_data('Data', []);
-        $this->assertStringStartsWith('%PDF', $rpt->export_to_memory('pdf'));
+        // rdlnative 27+ ignores datasets with zero rows, so the report's own
+        // SQL query runs (and fails here: SalesReport.rdl has no database).
+        // Older engines inject the empty table and render a PDF.  Either is
+        // fine; a crash is not.
+        try {
+            $this->assertStringStartsWith('%PDF', $rpt->export_to_memory('pdf'));
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('rdl_report_render', $e->getMessage());
+        }
     }
 }

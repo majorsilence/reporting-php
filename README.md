@@ -155,11 +155,9 @@ Download the native shared library from the release (`majorsilence-reporting-rdl
 | macOS | `librdlnative.dylib` |
 | Windows | `rdlnative.dll` |
 
-On Linux, pre-load the library directory before starting PHP so that the .NET runtime's sibling libraries are on `LD_LIBRARY_PATH`:
+Keep the .NET runtime's sibling libraries (`libSkiaSharp.so`, `libe_sqlite3.so`, ...) in the same directory as `librdlnative.so`; they are found from there automatically.
 
-```bash
-export LD_LIBRARY_PATH=/path/to/rdlnative-dir:$LD_LIBRARY_PATH
-```
+> **Do not set `LD_LIBRARY_PATH` to the rdlnative directory.** It is not needed, and with rdlnative 27.0.0-alpha.11 it makes PHP crash with a segmentation fault the first time a report opens a SQLite database. On Linux, SkiaSharp also needs `libfontconfig1` (e.g. `apt-get install libfontconfig1`).
 
 ```php
 use MajorsilenceReporting\RdlLibrary;
@@ -212,7 +210,6 @@ dotnet publish RdlNative -c Release-DrawingCompat -r linux-x64 -f net10.0 \
 
 # Run tests
 export RDLNATIVE_LIB=/tmp/rdlnative-pub/librdlnative.so
-export LD_LIBRARY_PATH=/tmp/rdlnative-pub:$LD_LIBRARY_PATH
 export REPORTING_REPO_ROOT=/path/to/Reporting
 composer test
 ```
